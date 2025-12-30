@@ -1,7 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.api import events
 
-app = FastAPI()
+app = FastAPI(title="GutIQ API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -10,6 +11,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include routers
+app.include_router(events.router)
 
 @app.get("/health")
 async def health():
