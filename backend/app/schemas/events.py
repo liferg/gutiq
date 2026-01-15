@@ -76,3 +76,10 @@ class EventCreateResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class EventDeleteResponse(BaseModel):
+    message: str = "Event deleted successfully"
+
+    class Config:
+        from_attributes = True

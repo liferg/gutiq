@@ -9,6 +9,7 @@ from app.schemas.events import (
     EventCreate,
     EventCreateResponse,
     EventResponse,
+    EventDeleteResponse,
     MealData,
     MealResponse,
     ExerciseData,
@@ -210,3 +211,17 @@ async def get_event_by_id(event_id: int, db: AsyncSession = Depends(get_db)):
         event_type=event.event_type,
         data=data,
     )
+
+
+@router.delete("/{event_id}", status_code=204)
+async def delete_event(event_id: int, db: AsyncSession = Depends(get_db)):
+    """
+    Deletes an event by ID.
+    """
+    # Query the event by ID
+    result = await db.execute(select(Event).where(Event.event_id == event_id))
+    event = result.scalar_one_or_none()
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+    await db.delete(event)
+    await db.commit()

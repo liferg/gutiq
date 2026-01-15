@@ -82,6 +82,14 @@ def get_event_by_id(event_id):
     print(json.dumps(event, indent=2))
     return event
 
+def delete_event(event_id):
+    """Delete a specific event by ID"""
+    response = requests.delete(f"{BASE_URL}/events/{event_id}")
+    if response.status_code == 204:
+        print(f"Successfully deleted event {event_id}")
+    else:
+        print(f"Failed to delete event {event_id}: {response.status_code}")
+    return response.status_code
 
 if __name__ == "__main__":
     print("=== Testing GutIQ Event Logging APIs ===\n")
@@ -99,5 +107,12 @@ if __name__ == "__main__":
     # Get specific event
     print(f"\n3. Fetching specific meal event (ID: {meal_id})...")
     get_event_by_id(meal_id)
+
+    print("\n5. Fetching all events...")
+    get_all_events()
+
+    # print(f"\n6. Deleting all events created in this test...")
+    # for event_id in [meal_id, exercise_id, symptom_id]:
+    #     delete_event(event_id)
 
     print("\n=== Testing complete! ===")

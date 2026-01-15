@@ -35,9 +35,9 @@ class Event(Base):
     event_type = Column(Enum(EventType), nullable=False)
 
     # One-to-one relationships - Each meal has at most one meal, exercise, and symptom
-    meal = relationship("Meal", back_populates="event", uselist=False)
-    exercise = relationship("Exercise", back_populates="event", uselist=False)
-    symptom = relationship("Symptom", back_populates="event", uselist=False)
+    meal = relationship("Meal", back_populates="event", uselist=False, cascade="all, delete-orphan")
+    exercise = relationship("Exercise", back_populates="event", uselist=False, cascade="all, delete-orphan")
+    symptom = relationship("Symptom", back_populates="event", uselist=False, cascade="all, delete-orphan")
 
 
 class Meal(Base):
