@@ -1,18 +1,33 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import EventForm from "./components/EventForm";
+import EventList from "./components/EventList";
+import "./App.css";
 
 function App() {
-  const [status, setStatus] = useState("loading");
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  useEffect(() => {
-    fetch("http://localhost:8000/health")
-      .then(res => res.json())
-      .then(data => setStatus(data.status));
-  }, []);
+  const handleEventCreated = () => {
+    // Trigger a refresh of the event list
+    setRefreshTrigger((prev) => prev + 1);
+  };
 
   return (
-    <div>
-      <h1>GutIQ</h1>
-      <p>Backend status: {status}</p>
+    <div className="app">
+      <header>
+        <h1>GutIQ</h1>
+        <p className="subtitle">Track your meals, exercise, and GI symptoms</p>
+      </header>
+
+      <main className="container">
+        <div className="layout">
+          <div className="left-panel">
+            <EventForm onEventCreated={handleEventCreated} />
+          </div>
+          <div className="right-panel">
+            <EventList refreshTrigger={refreshTrigger} />
+          </div>
+        </div>
+      </main>
     </div>
   );
 }

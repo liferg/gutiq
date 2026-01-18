@@ -1,0 +1,124 @@
+import { useEffect, useState } from "react";
+
+const EventList = ({ refreshTrigger }) => {
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const fetchEvents = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch("http://localhost:8000/events");
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch events: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      setEvents(data);
+      setError(null);
+    } catch (err) {
+      setError(err.message);
+      console.error("Error fetching events:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchEvents();
+  }, [refreshTrigger]);
+
+  const formatTimestamp = (timestamp) => {
+    const date = new Date(timestamp);
+    return date.toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
+
+  const formatEventType = (type) => {
+    return type.charAt(0).toUpperCase() + type.slice(1);
+  };
+
+  const renderEventData = (event) => {
+    if (event.event_type === "meal") {
+      const nutritionItems = [];
+      if (event.data.calories) nutritionItems.push(`${event.data.calories} cal`);
+      if (event.data.protein) nutritionItems.push(`Protein: ${event.data.protein}g`);
+      if (event.data.carbohydrates) nutritionItems.push(`Carbs: ${event.data.carbohydrates}g`);
+      if (event.data.fats) nutritionItems.push(`Fats: ${event.data.fats}g`);
+
+      return (
+        <div className="event-details">
+          <ul>
+            <li><strong>Foods:</strong> {event.data.foods.join(", ")}</li>
+            {nutritionItems.length > 0 && (
+              <li><strong>Nutrition:</strong> {nutritionItems.join(" | ")}</li>
+            )}
+          </ul>
+        </div>
+      );
+    } else if (event.event_type === "exercise") {
+      return (
+        <div className="event-details">
+          <ul>
+            <li><strong>Type:</strong> {event.data.type}</li>
+            <li><strong>Duration:</strong> {event.data.duration_minutes} minutes</li>
+          </ul>
+        </div>
+      );
+    } else if (event.event_type === "symptom") {
+      return (
+        <div className="event-details">
+          <ul>
+            <li><strong>Description:</strong> {event.data.description}</li>
+            <li>
+              <strong>Severity:</strong>{" "}
+              <span className={`severity-badge ${event.data.severity}`}>
+                {event.data.severity}
+              </span>
+            </li>
+          </ul>
+        </div>
+      );
+    }
+  };
+
+  if (loading) {
+    return <div className="event-list loading">Loading events...</div>;
+  }
+
+  if (error) {
+    return <div className="event-list error">Error: {error}</div>;
+  }
+
+  return (
+    <div className="event-list">
+      <h2>Recent Events</h2>
+
+      {events.length === 0 ? (
+        <p className="no-events">No events logged yet. Start by adding one!</p>
+      ) : (
+        <div className="events">
+          {events.map((event) => (
+            <div key={event.event_id} className={`event-card ${event.event_type}`}>
+              <div className="event-header">
+                <h3 className="event-title">
+                  {formatEventType(event.event_type)}: {formatTimestamp(event.timestamp)}
+                </h3>
+              </div>
+              {renderEventData(event)}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default EventList;
