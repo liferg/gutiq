@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "../services/api";
 
-const EventForm = ({ onEventCreated }) => {
+const EventForm = () => {
+  const queryClient = useQueryClient();
   const [eventType, setEventType] = useState("meal");
   const [timestamp, setTimestamp] = useState(
     new Date().toISOString().slice(0, 16)
@@ -22,13 +24,22 @@ const EventForm = ({ onEventCreated }) => {
   const [description, setDescription] = useState("");
   const [severity, setSeverity] = useState("mild");
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState(null);
+  const createEventMutation = useMutation({
+    mutationFn: (eventData) => api.createEvent(eventData),
+    onSuccess: (result) => {
+      console.log("Event created:", result);
+      // Invalidate and refetch events query
+      queryClient.invalidateQueries({ queryKey: ["events"] });
+      // Clear form
+      resetForm();
+    },
+    onError: (err) => {
+      console.error("Error creating event:", err);
+    },
+  });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsSubmitting(true);
-    setError(null);
 
     let eventData = {
       timestamp: new Date(timestamp).toISOString(),
@@ -57,23 +68,7 @@ const EventForm = ({ onEventCreated }) => {
       };
     }
 
-    try {
-      const result = await api.createEvent(eventData);
-      console.log("Event created:", result);
-
-      // Clear form
-      resetForm();
-
-      // Notify parent component
-      if (onEventCreated) {
-        onEventCreated();
-      }
-    } catch (err) {
-      setError(err.message);
-      console.error("Error creating event:", err);
-    } finally {
-      setIsSubmitting(false);
-    }
+    createEventMutation.mutate(eventData);
   };
 
   const resetForm = () => {
@@ -242,10 +237,16 @@ const EventForm = ({ onEventCreated }) => {
           </>
         )}
 
-        {error && <div className="error-message">{error}</div>}
+        {createEventMutation.isError && (
+          <div className="error-message">{createEventMutation.error.message}</div>
+        )}
 
-        <button type="submit" disabled={isSubmitting} className="submit-btn">
-          {isSubmitting ? "Saving..." : "Log Event"}
+        <button
+          type="submit"
+          disabled={createEventMutation.isPending}
+          className="submit-btn"
+        >
+          {createEventMutation.isPending ? "Saving..." : "Log Event"}
         </button>
       </form>
     </div>

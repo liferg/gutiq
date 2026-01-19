@@ -1,34 +1,39 @@
-import { useState } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import EventForm from "./components/EventForm";
 import EventList from "./components/EventList";
 import "./App.css";
 
+// Create a client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // Data is fresh for 5 minutes
+      refetchOnWindowFocus: true, // Refetch when window regains focus
+    },
+  },
+});
+
 function App() {
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
-
-  const handleEventCreated = () => {
-    // Trigger a refresh of the event list
-    setRefreshTrigger((prev) => prev + 1);
-  };
-
   return (
-    <div className="app">
-      <header>
-        <h1>GutIQ</h1>
-        <p className="subtitle">Track your meals, exercise, and GI symptoms</p>
-      </header>
+    <QueryClientProvider client={queryClient}>
+      <div className="app">
+        <header>
+          <h1>GutIQ</h1>
+          <p className="subtitle">Track your meals, exercise, and GI symptoms</p>
+        </header>
 
-      <main className="container">
-        <div className="layout">
-          <div className="left-panel">
-            <EventForm onEventCreated={handleEventCreated} />
+        <main className="container">
+          <div className="layout">
+            <div className="left-panel">
+              <EventForm />
+            </div>
+            <div className="right-panel">
+              <EventList />
+            </div>
           </div>
-          <div className="right-panel">
-            <EventList refreshTrigger={refreshTrigger} />
-          </div>
-        </div>
-      </main>
-    </div>
+        </main>
+      </div>
+    </QueryClientProvider>
   );
 }
 

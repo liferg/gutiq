@@ -1,28 +1,15 @@
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import api from "../services/api";
 
-const EventList = ({ refreshTrigger }) => {
-  const [events, setEvents] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  const fetchEvents = async () => {
-    try {
-      setLoading(true);
-      const data = await api.getEvents();
-      setEvents(data);
-      setError(null);
-    } catch (err) {
-      setError(err.message);
-      console.error("Error fetching events:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchEvents();
-  }, [refreshTrigger]);
+const EventList = () => {
+  const {
+    data: events = [],
+    isLoading: loading,
+    error,
+  } = useQuery({
+    queryKey: ["events"],
+    queryFn: () => api.getEvents(),
+  });
 
   const formatTimestamp = (timestamp) => {
     const date = new Date(timestamp);
@@ -89,7 +76,7 @@ const EventList = ({ refreshTrigger }) => {
   }
 
   if (error) {
-    return <div className="event-list error">Error: {error}</div>;
+    return <div className="event-list error">Error: {error.message}</div>;
   }
 
   return (
