@@ -1,4 +1,5 @@
 import { useState } from "react";
+import api from "../services/api";
 
 const EventForm = ({ onEventCreated }) => {
   const [eventType, setEventType] = useState("meal");
@@ -57,19 +58,7 @@ const EventForm = ({ onEventCreated }) => {
     }
 
     try {
-      const response = await fetch("http://localhost:8000/events", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(eventData),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to create event: ${response.statusText}`);
-      }
-
-      const result = await response.json();
+      const result = await api.createEvent(eventData);
       console.log("Event created:", result);
 
       // Clear form

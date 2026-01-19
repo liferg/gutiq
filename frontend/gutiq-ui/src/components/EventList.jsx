@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import api from "../services/api";
 
 const EventList = ({ refreshTrigger }) => {
   const [events, setEvents] = useState([]);
@@ -8,13 +9,7 @@ const EventList = ({ refreshTrigger }) => {
   const fetchEvents = async () => {
     try {
       setLoading(true);
-      const response = await fetch("http://localhost:8000/events");
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch events: ${response.statusText}`);
-      }
-
-      const data = await response.json();
+      const data = await api.getEvents();
       setEvents(data);
       setError(null);
     } catch (err) {
