@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import events
+from app.api import events, ai_insights
 from app.config import get_settings
 
 # Load settings
@@ -18,6 +18,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(events.router)
+app.include_router(ai_insights.router)
 
 @app.get("/health")
 async def health():

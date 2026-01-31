@@ -15,3 +15,13 @@ AsyncSessionLocal = sessionmaker(
 )
 
 Base = declarative_base()
+
+
+# Dependency to get database session
+async def get_db():
+    """
+    FastAPI dependency that provides a database session.
+    Automatically closes the session when the request is complete.
+    """
+    async with AsyncSessionLocal() as session:
+        yield session
