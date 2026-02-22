@@ -59,7 +59,7 @@ def test_get_insights():
 
         if response.status_code == 200:
             data = response.json()
-            print(f"\n Success! Retrieved {len(data)} insights")
+            print(f"\n Success! Retrieved {len(data)} insights. Here are the first 3:")
             for i, insight in enumerate(data[:3], 1):  # Show first 3
                 print(f"\n   Insight {i}:")
                 print(f"   - ID: {insight['id']}")

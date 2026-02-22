@@ -6,6 +6,10 @@ Analyzes user events (meals, exercises, symptoms) to provide personalized insigh
 from openai import OpenAI
 from app.config import get_settings
 from app.db.models import Event, AIInsight
+from app.services.prompts import (
+    INSIGHT_GENERATION_SYSTEM_PROMPT,
+    get_insight_generation_user_prompt
+)
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
@@ -98,24 +102,9 @@ class AIService:
         # Format events for AI
         events_text = self.format_events_for_analysis(events)
 
-        # Create AI prompt
-        system_prompt = """You are a helpful AI assistant specializing in gut health and wellness.
-Analyze the user's recent meals, exercises, and symptoms to provide actionable insights.
-
-Focus on:
-1. Patterns between meals and symptoms (e.g., certain foods causing issues)
-2. Timing of symptoms relative to meals
-3. Positive trends (e.g., exercises that correlate with fewer symptoms)
-4. Nutritional balance and recommendations
-5. Suggestions for tracking or lifestyle changes
-
-Be concise, supportive, and actionable. Limit response to 3-4 sentences."""
-
-        user_prompt = f"""Here are my recent health events from the past {time_range_days} days:
-
-{events_text}
-
-Please analyze these events and provide insights about patterns, potential triggers, and recommendations."""
+        # Get prompts from centralized location
+        system_prompt = INSIGHT_GENERATION_SYSTEM_PROMPT
+        user_prompt = get_insight_generation_user_prompt(events_text, time_range_days)
 
         # Call OpenAI API
         try:
