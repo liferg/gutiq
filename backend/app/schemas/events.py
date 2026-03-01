@@ -73,6 +73,7 @@ class EventResponse(BaseModel):
 
 class EventCreateResponse(BaseModel):
     event_id: int
+    insight_generation_triggered: bool = False
 
     class Config:
         from_attributes = True

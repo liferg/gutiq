@@ -38,12 +38,21 @@ const EventForm = () => {
     mutationFn: (eventData) => api.createEvent(eventData),
     onSuccess: (result, variables) => {
       console.log("Event created:", result);
+
       // Invalidate and refetch events query
       queryClient.invalidateQueries({ queryKey: ["events"] });
-      // If it was a meal event, also invalidate insights (in case auto-generation triggered)
+
+      // If insight generation was triggered, notify AIInsights component
+      if (result.insight_generation_triggered) {
+        console.log("Insight generation triggered!");
+        window.dispatchEvent(new Event("insight-generation-started"));
+      }
+
+      // If it was a meal event, invalidate insights to refresh display
       if (variables.event_type === "meal") {
         queryClient.invalidateQueries({ queryKey: ["insights"] });
       }
+
       // Clear form
       resetForm();
     },

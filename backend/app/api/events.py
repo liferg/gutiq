@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from typing import List
+import asyncio
 
 from app.db.database import AsyncSessionLocal
 from app.db.models import Event, Meal, Exercise, Symptom, EventType
@@ -28,9 +29,26 @@ async def get_db():
         yield session
 
 
+# Background task for generating insights
+async def generate_insight_background():
+    """
+    Background task to generate AI insight.
+    Creates its own database session.
+    """
+    async with AsyncSessionLocal() as session:
+        ai_service = AIService()
+        try:
+            insight_text, _ = await ai_service.generate_insight(session, time_range_days=30)
+            await ai_service.save_insight(session, insight_text)
+            print("Background insight generation completed successfully")
+        except Exception as e:
+            print(f"Failed to auto-generate insight in background: {str(e)}")
+
+
 @router.post("", response_model=EventCreateResponse, status_code=201)
 async def create_event(
     event_data: EventCreate,
+    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -90,6 +108,9 @@ async def create_event(
     await db.commit()
     await db.refresh(event)
 
+    # Check if we should trigger insight generation
+    insight_triggered = False
+
     # Auto-generate insight after every N meal events (configured in settings)
     if event_data.event_type == EventType.meal:
         settings = get_settings()
@@ -103,15 +124,14 @@ async def create_event(
 
         # Generate insight if we've hit a multiple of the threshold
         if total_meals % settings.insight_meal_threshold == 0:
-            ai_service = AIService()
-            try:
-                insight_text, _ = await ai_service.generate_insight(db, time_range_days=30)
-                await ai_service.save_insight(db, insight_text)
-            except Exception as e:
-                # Log error but don't fail the event creation
-                print(f"Failed to auto-generate insight: {str(e)}")
+            # Trigger insight generation in background (non-blocking)
+            background_tasks.add_task(generate_insight_background)
+            insight_triggered = True
 
-    return EventCreateResponse(event_id=event.event_id)
+    return EventCreateResponse(
+        event_id=event.event_id,
+        insight_generation_triggered=insight_triggered
+    )
 
 
 @router.get("", response_model=List[EventResponse])
