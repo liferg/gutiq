@@ -36,10 +36,14 @@ const EventForm = () => {
 
   const createEventMutation = useMutation({
     mutationFn: (eventData) => api.createEvent(eventData),
-    onSuccess: (result) => {
+    onSuccess: (result, variables) => {
       console.log("Event created:", result);
       // Invalidate and refetch events query
       queryClient.invalidateQueries({ queryKey: ["events"] });
+      // If it was a meal event, also invalidate insights (in case auto-generation triggered)
+      if (variables.event_type === "meal") {
+        queryClient.invalidateQueries({ queryKey: ["insights"] });
+      }
       // Clear form
       resetForm();
     },

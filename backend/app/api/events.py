@@ -1,10 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, func
 from typing import List
 
 from app.db.database import AsyncSessionLocal
 from app.db.models import Event, Meal, Exercise, Symptom, EventType
+from app.services.ai_service import AIService
+from app.config import get_settings
 from app.schemas.events import (
     EventCreate,
     EventCreateResponse,
@@ -19,7 +21,6 @@ from app.schemas.events import (
 )
 
 router = APIRouter(prefix="/events", tags=["events"])
-
 
 # Dependency to get database session
 async def get_db():
@@ -88,6 +89,27 @@ async def create_event(
 
     await db.commit()
     await db.refresh(event)
+
+    # Auto-generate insight after every N meal events (configured in settings)
+    if event_data.event_type == EventType.meal:
+        settings = get_settings()
+
+        # Count total meal events
+        meal_count_result = await db.execute(
+            select(func.count(Event.event_id))
+            .where(Event.event_type == EventType.meal)
+        )
+        total_meals = meal_count_result.scalar()
+
+        # Generate insight if we've hit a multiple of the threshold
+        if total_meals % settings.insight_meal_threshold == 0:
+            ai_service = AIService()
+            try:
+                insight_text, _ = await ai_service.generate_insight(db, time_range_days=30)
+                await ai_service.save_insight(db, insight_text)
+            except Exception as e:
+                # Log error but don't fail the event creation
+                print(f"Failed to auto-generate insight: {str(e)}")
 
     return EventCreateResponse(event_id=event.event_id)
 

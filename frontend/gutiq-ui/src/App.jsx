@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import EventForm from "./components/EventForm";
 import EventList from "./components/EventList";
+import AIInsights from "./components/AIInsights";
 import "./App.css";
 
 // Create a client
@@ -23,6 +24,8 @@ function App() {
         </header>
 
         <main className="container">
+          <AIInsights />
+
           <div className="layout">
             <div className="left-panel">
               <EventForm />

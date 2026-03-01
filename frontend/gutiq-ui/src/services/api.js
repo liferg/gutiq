@@ -97,6 +97,39 @@ class ApiService {
       method: 'GET',
     });
   }
+
+  /**
+   * Generate a new AI insight based on recent events
+   * @param {number} timeRangeDays - Number of days to analyze (default: 7)
+   * @returns {Promise<Object>} Generated insight response
+   */
+  async generateInsight(timeRangeDays = 7) {
+    return this.request('/ai-insights/generate', {
+      method: 'POST',
+      body: JSON.stringify({ time_range_days: timeRangeDays }),
+    });
+  }
+
+  /**
+   * Get all AI insights
+   * @returns {Promise<Array>} Array of AI insight objects
+   */
+  async getInsights() {
+    return this.request('/ai-insights/', {
+      method: 'GET',
+    });
+  }
+
+  /**
+   * Get a single AI insight by ID
+   * @param {number} insightId - Insight ID
+   * @returns {Promise<Object>} AI insight object
+   */
+  async getInsight(insightId) {
+    return this.request(`/ai-insights/${insightId}`, {
+      method: 'GET',
+    });
+  }
 }
 
 // Export singleton instance

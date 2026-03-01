@@ -23,6 +23,9 @@ class Settings(BaseSettings):
     # CORS Configuration
     frontend_url: str = "http://localhost:5173"
 
+    # AI Insights Configuration
+    insight_meal_threshold: int = 3  # Generate insight after every N meal events
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
