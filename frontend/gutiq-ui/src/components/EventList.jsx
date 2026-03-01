@@ -1,7 +1,9 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "../services/api";
 
 const EventList = () => {
+  const queryClient = useQueryClient();
+
   const {
     data: events = [],
     isLoading: loading,
@@ -10,6 +12,24 @@ const EventList = () => {
     queryKey: ["events"],
     queryFn: () => api.getEvents(),
   });
+
+  const deleteEventMutation = useMutation({
+    mutationFn: (eventId) => api.deleteEvent(eventId),
+    onSuccess: () => {
+      // Invalidate and refetch events
+      queryClient.invalidateQueries({ queryKey: ["events"] });
+    },
+    onError: (err) => {
+      console.error("Error deleting event:", err);
+      alert(`Failed to delete event: ${err.message}`);
+    },
+  });
+
+  const handleDelete = (eventId, eventType) => {
+    if (window.confirm(`Are you sure you want to delete this ${eventType}?`)) {
+      deleteEventMutation.mutate(eventId);
+    }
+  };
 
   const formatTimestamp = (timestamp) => {
     const date = new Date(timestamp);
@@ -93,6 +113,14 @@ const EventList = () => {
                 <h3 className="event-title">
                   {formatEventType(event.event_type)}: {formatTimestamp(event.timestamp)}
                 </h3>
+                <button
+                  onClick={() => handleDelete(event.event_id, event.event_type)}
+                  className="delete-button"
+                  disabled={deleteEventMutation.isPending}
+                  title="Delete event"
+                >
+                  ×
+                </button>
               </div>
               {renderEventData(event)}
             </div>
