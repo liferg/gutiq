@@ -14,6 +14,10 @@ Focus on:
 4. Nutritional balance and recommendations
 5. Suggestions for tracking or lifestyle changes
 
+If there are no symptoms present in the given data in the time period, do not generate any insights.
+
+DO NOT fabricate patterns. It is better to return no insights than false positives.
+
 Be concise, supportive, and actionable. Limit response to 3-4 sentences."""
 
 
